@@ -1,3 +1,14 @@
+########################################
+# Mark Max 5/12/17
+# Lineup Optimizer for Draftkings MLB DFS
+# Designed in Pycharm Community Edition
+#
+# Drawing from an excel model I've created for expected daily MLB results, presorted by adjusted player 
+# value, this program will calculate over 2 million lineup combinations and return the optimal 
+# lineup for the day.
+########################################
+
+
 import openpyxl
 
 FULL_TEAM = 10
@@ -85,7 +96,7 @@ def getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstop, out
 
 file = open("output.txt", 'w')
 
-workbook = openpyxl.load_workbook('Fangraphs Data Model.xlsx')
+workbook = openpyxl.load_workbook('MLB Data Model.xlsx')
 
 pitchers = []
 sheet = workbook.get_sheet_by_name('P')
