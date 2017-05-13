@@ -154,7 +154,7 @@ for P1 in range(0, numPitchers - 1):
                             continue
                         for ThreeB in thirdbase:
                             if ThreeB.getID() != SS.getID() and ThreeB.getID() != TwoB.getID() \
-                                    and ThreeB.getID() != OneB and ThreeB.getID() != C.getID():
+                                    and ThreeB.getID() != OneB.getID() and ThreeB.getID() != C.getID():
                                 team[6] = ThreeB
                             else:
                                 continue
