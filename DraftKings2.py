@@ -4,8 +4,8 @@
 # Designed in Pycharm Community Edition
 #
 # Drawing from an excel model I've created for expected daily MLB results, presorted by adjusted player 
-# value, this program will calculate over 2 million lineup combinations and return the optimal 
-# lineup for the day.
+# value, this program will calculate over 160 million lineup combinations in less than one minute 
+# and return the optimal lineup for the day.
 ########################################
 
 
@@ -43,6 +43,8 @@ class Player:
 
 
 def getPitchers(sheet, players):
+    global MAX_P
+    
     for row in range(2, sheet.max_row + 1):
         id = sheet['Q' + str(row)].value
         name = sheet['A' + str(row)].value
@@ -56,8 +58,6 @@ def getPitchers(sheet, players):
 
 
 def getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstop, outfield):
-    global FULL_TEAM
-    global MAX_P
     global MAX_C
     global MAX_1B
     global MAX_2B
