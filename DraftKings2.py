@@ -12,13 +12,13 @@
 import openpyxl
 
 FULL_TEAM = 10
-MAX_P = 5
-MAX_C = 4
-MAX_1B = 5
-MAX_2B = 4
-MAX_3B = 4
-MAX_SS = 4
-MAX_OF = 12
+MAX_P = 10
+MAX_C = 6
+MAX_1B = 7
+MAX_2B = 6
+MAX_3B = 6
+MAX_SS = 6
+MAX_OF = 15
 MAX_SALARY = 50000
 
 
@@ -65,6 +65,8 @@ def getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstop, out
     global MAX_SS
     global MAX_OF
 
+    max = 0
+
     for row in range(2, sheet.max_row + 1):
         id = sheet['T' + str(row)].value
         name = sheet['A' + str(row)].value
@@ -89,14 +91,19 @@ def getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstop, out
         if 'OF' in sheet['U' + str(row)].value and len(outfield) < MAX_OF:
             outfield.append(Player(id, name, score, salary))
 
+        if score > max:
+            max = score
+
         if (len(catchers) + len(firstbase) + len(secondbase) + len(thirdbase) + len(shortstop) + len(outfield)) \
                 >= (MAX_C + MAX_1B + MAX_2B + MAX_3B + MAX_SS + MAX_OF):
             break
 
+    return max
+
 
 file = open("output.txt", 'w')
 
-workbook = openpyxl.load_workbook('MLB Data Model.xlsx')
+workbook = openpyxl.load_workbook('Fangraphs Data Model.xlsx')
 
 pitchers = []
 sheet = workbook.get_sheet_by_name('P')
@@ -109,7 +116,7 @@ shortstops = []
 thirdbase = []
 outfield = []
 sheet = workbook.get_sheet_by_name('H')
-getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstops, outfield)
+maxPlayerScore = getHitters(sheet, catchers, firstbase, secondbase, thirdbase, shortstops, outfield)
 
 numPitchers = len(pitchers)
 # numC = len(catchers)
@@ -132,6 +139,8 @@ count = 0
 
 for P1 in range(0, numPitchers - 1):
     team = ['', '', '', '', '', '', '', '', '', '']
+    totalSalary = 0
+    totalScore = 0
     team[0] = pitchers[P1]
     for P2 in range(P1 + 1, numPitchers):
         team[1] = pitchers[P2]
@@ -142,11 +151,13 @@ for P1 in range(0, numPitchers - 1):
                     team[3] = OneB
                 else:
                     continue
+
                 for TwoB in secondbase:
                     if TwoB.getID() != OneB.getID() and TwoB.getID() != C.getID():
                         team[4] = TwoB
                     else:
                         continue
+
                     for SS in shortstops:
                         if SS.getID() != TwoB.getID() and SS.getID() != OneB.getID() and SS.getID() != C.getID():
                             team[5] = SS
@@ -154,10 +165,21 @@ for P1 in range(0, numPitchers - 1):
                             continue
                         for ThreeB in thirdbase:
                             if ThreeB.getID() != SS.getID() and ThreeB.getID() != TwoB.getID() \
-                                    and ThreeB.getID() != OneB.getID() and ThreeB.getID() != C.getID():
+                                    and ThreeB.getID() != OneB and ThreeB.getID() != C.getID():
                                 team[6] = ThreeB
                             else:
                                 continue
+
+                            totalSalary = 0
+                            totalScore = 0
+
+                            for player in range(0, 7):
+                                totalSalary += team[player].getSalary()
+                                totalScore += team[player].getScore()
+
+                            if totalSalary > MAX_SALARY or totalScore + maxPlayerScore * 3 <= maxScore:
+                                continue
+
                             for OF1 in range(0, numOF - 2):
                                 if outfield[OF1].getID() != ThreeB.getID() and outfield[OF1].getID() != SS.getID()\
                                         and outfield[OF1].getID() != TwoB.getID() \
@@ -166,6 +188,18 @@ for P1 in range(0, numPitchers - 1):
                                     team[7] = outfield[OF1]
                                 else:
                                     continue
+
+                                totalSalary = 0
+                                totalScore = 0
+
+                                for player in range(0, 8):
+                                    totalSalary += int(team[player].getSalary())
+                                    totalScore += float(team[player].getScore())
+
+                                if totalSalary > MAX_SALARY or totalScore + maxPlayerScore * 2 <= maxScore \
+                                        and OF1 < numOF - 2:
+                                    continue
+
                                 for OF2 in range(OF1 + 1, numOF - 1):
                                     if outfield[OF2].getID() != ThreeB.getID() and outfield[OF2].getID() != SS.getID()\
                                            and outfield[OF2].getID() != TwoB.getID() \
@@ -174,6 +208,18 @@ for P1 in range(0, numPitchers - 1):
                                         team[8] = outfield[OF2]
                                     else:
                                         continue
+
+                                    totalSalary = 0
+                                    totalScore = 0
+
+                                    for player in range(0, 9):
+                                        totalSalary += int(team[player].getSalary())
+                                        totalScore += float(team[player].getScore())
+
+                                    if (totalSalary > MAX_SALARY or totalScore + maxPlayerScore <= maxScore) \
+                                            and OF2 < numOF - 1:
+                                        continue
+
                                     for OF3 in range(OF2 + 1, numOF):
                                         if outfield[OF3].getID() != ThreeB.getID() \
                                                 and outfield[OF3].getID() != SS.getID() \
