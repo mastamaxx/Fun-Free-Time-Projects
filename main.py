@@ -6,12 +6,13 @@ import time
 GAMES_TO_SIM = 10000
 MIN_SALARY_TARGET = 48000
 MAX_SALARY_TARGET = 50000
-
-MIN_SCORE_TARGET = 104
-SCORE_TARGET_1 = 140
-SCORE_TARGET_2 = 160
-SCORE_TARGET_3 = 180
-SCORE_TARGET_4 = 200
+MIN_SCORE_TARGET = 107
+SCORE_TARGET_1 = MIN_SCORE_TARGET * 1.1
+SCORE_TARGET_2 = MIN_SCORE_TARGET * 1.3
+SCORE_TARGET_3 = MIN_SCORE_TARGET * 1.45
+SCORE_TARGET_4 = MIN_SCORE_TARGET * 1.6
+PLAYERS_PER_DK_TEAM = 10
+MAX_PLAYERS_PER_TEAM = 5
 
 PA_INDEX = 8
 H_INDEX = 9
@@ -651,6 +652,7 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
     for p1 in range(0, len(pitchers) - 1):
         print("%f minutes - P1: " % ((time.time() - start_time) / 60) + str(p1) + " started")
         if pitchers[p1][P_PITCHER_ORDER_INDEX] == 1:
+            p1_id = pitchers[p1][P_DK_ID_INDEX]
             p1_teamid = pitchers[p1][P_TEAMID_INDEX]
             p1_player_team = pitchers[p1][P_PLAYER_NAME_INDEX] + " " + pitchers[p1][P_TEAM_NAME_INDEX]
             p1_salary = pitchers[p1][P_DK_SALARY_INDEX]
@@ -660,6 +662,7 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
 
         for p2 in range(p1 + 1, len(pitchers)):
             if pitchers[p2][P_PITCHER_ORDER_INDEX] == 1:
+                p2_id = pitchers[p2][P_DK_ID_INDEX]
                 p2_teamid = pitchers[p2][P_TEAMID_INDEX]
                 p2_player_team = pitchers[p2][P_PLAYER_NAME_INDEX] + " " + pitchers[p2][P_TEAM_NAME_INDEX]
                 p2_salary = pitchers[p2][P_DK_SALARY_INDEX]
@@ -676,6 +679,12 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
                 c_avg_score = catcher[POSITION_DK_AVG_SCORE_INDEX]
 
                 for fb in firstbase:
+
+                    total_avg_score = p1_avg_score + p2_avg_score + c_avg_score
+                    if total_avg_score + max_fb_avg_score + max_sb_avg_score + max_ss_avg_score + max_tb_avg_score \
+                            + max_of_avg_score * 3 < MIN_SCORE_TARGET:
+                        continue
+
                     fb_id = fb[POSITION_DK_ID_INDEX]
                     if c_id != fb_id:
                         fb_teamid = fb[POSITION_TEAMID_INDEX]
@@ -687,6 +696,12 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
                         continue
 
                     for sb in secondbase:
+
+                        total_avg_score = p1_avg_score + p2_avg_score + c_avg_score + fb_avg_score
+                        if total_avg_score + max_sb_avg_score + max_ss_avg_score + max_tb_avg_score \
+                                + max_of_avg_score * 3 < MIN_SCORE_TARGET:
+                            continue
+
                         sb_id = sb[POSITION_DK_ID_INDEX]
                         if c_id != sb_id and fb_id != sb_id:
                             sb_teamid = sb[POSITION_TEAMID_INDEX]
@@ -740,6 +755,10 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
                                     tb_salary = tb[POSITION_DK_SALARY_INDEX]
                                     tb_avg_score = tb[POSITION_DK_AVG_SCORE_INDEX]
                                 else:
+                                    continue
+
+                                if c_teamid == fb_teamid == sb_teamid == ss_teamid == tb_teamid \
+                                        and (p1_teamid == c_teamid or p2_teamid == c_teamid):
                                     continue
 
                                 for of1 in range(0, len(outfield) - 2):
@@ -815,6 +834,15 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
                                             else:
                                                 continue
 
+                                            #teamids = [p1_teamid, p2_teamid, c_teamid, fb_teamid, sb_teamid, ss_teamid,
+                                            #           tb_teamid, of1_teamid, of2_teamid, of3_teamid]
+                                            max_freq_not_met = True
+                                            #for i in teamids:
+                                           #    freq = teamids.count(i)
+                                            #    if freq > MAX_PLAYERS_PER_TEAM:
+                                            #        max_freq_not_met = False
+                                            #        break
+
                                             total_salary = p1_salary + p2_salary + c_salary + fb_salary + sb_salary \
                                                            + ss_salary + tb_salary + of1_salary + of2_salary \
                                                            + of3_salary
@@ -822,16 +850,16 @@ def initiateTeams(teams, pitchers, catchers, firstbase, secondbase, shortstop, t
                                                               + sb_avg_score + ss_avg_score + tb_avg_score \
                                                               + of1_avg_score + of2_avg_score + of3_avg_score
                                             if MAX_SALARY_TARGET >= total_salary >= MIN_SALARY_TARGET \
-                                                    and total_avg_score > MIN_SCORE_TARGET:
-                                                teams.append([p1_teamid, p1_player_team, p2_teamid, p2_player_team,
-                                                              c_teamid, c_batting_order, c_player_team, fb_teamid,
-                                                              fb_batting_order, fb_player_team, sb_teamid,
-                                                              sb_batting_order, sb_player_team, ss_teamid,
-                                                              ss_batting_order, ss_player_team, tb_teamid,
-                                                              tb_batting_order, tb_player_team, of1_teamid,
-                                                              of1_batting_order, of1_player_team, of2_teamid,
-                                                              of2_batting_order, of2_player_team, of3_teamid,
-                                                              of3_batting_order, of3_player_team, total_salary,
+                                                    and total_avg_score > MIN_SCORE_TARGET and max_freq_not_met:
+                                                teams.append([p1_teamid, p1_id, p2_teamid, p2_id,
+                                                              c_teamid, c_batting_order, c_id, fb_teamid,
+                                                              fb_batting_order, fb_id, sb_teamid,
+                                                              sb_batting_order, sb_id, tb_teamid,
+                                                              tb_batting_order, tb_id, ss_teamid,
+                                                              ss_batting_order, ss_id, of1_teamid,
+                                                              of1_batting_order, of1_id, of2_teamid,
+                                                              of2_batting_order, of2_id, of3_teamid,
+                                                              of3_batting_order, of3_id, total_salary,
                                                               0, 0, 0, 0, 0])
 
 
@@ -1126,7 +1154,7 @@ initiateTeams(dk_teams, pitchers, catchers, firstbase, secondbase, shortstop, th
 
 print("%f minutes - " % ((time.time() - start_time)/60) + str(len(dk_teams)) + " dk teams have been created")
 
-outputfile.write("P1, P2, C, 1B, 2B, SS, 3B, OF1, OF2, OF3, total scores, total salary, score target 1 count, "
+outputfile.write("P1, P2, C, 1B, 2B, 3B, SS, OF1, OF2, OF3, total scores, total salary, score target 1 count, "
                  "score target 2 count, score target 3 count, score target 4 count")
 combineTeamsAndScores(batterstats, pitcherstats, finaloutput)
 
